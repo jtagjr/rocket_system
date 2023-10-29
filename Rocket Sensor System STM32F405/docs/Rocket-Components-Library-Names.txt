@@ -1,0 +1,11 @@
+SamacSys_Parts.lbr  Library Parts
+ADP223ACPZR7 - Linear Voltage Regulators Linear Voltage
+ECS2520SMV080FNTR - Oscillators 8.000 MHz
+MEM20670218000A - Memory Card Connectors Micro SD Hinged
+BQ25170DSGR - Battery Management 800-mA linear battery charger for 1-cell Li-ion and LiFePO4
+AQ433701ETG - ESD Suppressors / TVS Diodes 5V 7A 0.25F 15kV SOD882 Bi-dir TVS AEC-Q101
+ESD7551N2T5G - ESD Suppressors / TVS Diodes BI-DIRECTIONAL 5V ESD PR
+TPD4S012DRYR - ESD Suppressors / TVS Diodes 4Ch USB ESD Solution w/ 
+
+GPS Pwr -  29mA
+SD Card - 100mA

@@ -1,0 +1,9 @@
+Accelerometer 1
+100g
+1000Hz
+Accelerometer 2
+16g
+50Hz
+Accelerometer 2
+16g
+50Hz

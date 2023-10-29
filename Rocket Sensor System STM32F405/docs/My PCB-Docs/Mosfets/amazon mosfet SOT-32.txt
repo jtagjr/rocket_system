@@ -1,0 +1,18 @@
+Compatible P/N:
+SI2300 SI2300DS SI2300DS-T1-E3 C009T
+
+Description:
+Condition: 100% Brand New And High Quality
+Material: Electrical Components
+Color: See Pictures
+Encapsulation: SOT-23
+
+Drain-Source Voltage: 20V
+Gate-Source Voltage: ±8v
+Drain Current (Continuous): 2.4A
+Drain Current (Pulsed) 1: 8A
+Total Power Dissipation @TA=250 °C: 0.9W
+Maximum Diode Forward Curren: 1.6A
+Operating Junction and Storage Temperature Range: -55 °C~+150 °C
+Thermal Resistance Junction to Ambient (PCB mounted) 2: 140 °C/W
+Size: 2.9mm x 2.4mm x 0.8mm

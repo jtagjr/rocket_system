@@ -1,0 +1,106 @@
+Wiring From Perspective of the ARM Board
+
+STM32F407Zx - 144 Pin Chip
+
+ ARM      Board Mask Label
+Column1      Column2
+
+---- SPI2 Sensors ----
+B13 - SPI2_SCK - White Wire
+B14 - SPI2_MISO - Yellow Wire - SDO on sensors
+B15 - SPI2_MOSI - Orange Wire - SDA/SDI on sensors
+A4 - A0 - CS - ACC1
+A5 - A1 - CS - ACC2
+A6 - A2 - CS - ACC3
+C4 - A4 - CS - Radio - S
+
+---- GPS ----
+C6 - D6 - GPS TX to ARM RX UART6
+B8 - D9  - GPS-RESET
+
+---- Radio Recieve Ready
+C5 - A5 - 0 Radio Packet Received Interrupt / TxReady interrupt
+C4 - A4 - CS - Radio - S
+C7 - D5 -  Reset
+
+---- Accelerometer High ------
+C2 - D12 - ACC_HIGH_INTERRUPT
+
+---- I2C1 - Altimeter, GPS --------
+B6 - SCL
+B7 - SDA
+C3 - D11 - Interrupt
+
+---- SDIO - SD Card ----
+Pin - SDIO BUS 
+C8 -  D0
+C9 -  D1
+C10 - D2
+C11 - D3
+C12 - CLK
+D2  - CMD
+
+---- USART3 Serial - Console ----
+B10 - D1 - TX - ARM transmit out
+B11 - D0 - RX - Arm receive in
+
+---- JTAG ----
+A13 - SWDIO - TMS
+A14 - SWDCLK - TCK
+
+---- USB ----
+A11 - D- OTG_FS_DM
+A12 - D+ OTG_FS_DP
+
+---- User LED ----
+C1 - D13 - Can use as GPIO if needed
+
+---- GPIO Test Pins ----
+
+B9 - D10 - USER_PIN_2
+A7 - A3  - USER_PIN_3
+C6 - D6 -  USER_PIN_4
+
+
+----- Radio Configuratin -----
+FSK -- Better performance and noise interference
+Whitening
+Variable length packet max length 64
+Address ID 1 for base station
+Address ID 2 for rocket
+Address ID 0x55 for ignitor
+
+Startup steps:
+Set node address to device ID
+set broadcast address to 0xFF
+Set Address Filtering to 10
+Set PayloadLength to 64
+Set CrcOn bit in RegPacketConfig1
+Turn on whitening: DcFree = 10.
+Set bit rate
+
+
+Configure for Interrupt on packet received
+Configure for interrupt on radio in TX mode
+Configure for Preamble, Sync Word (Network ID), Address byte (Node ID), CRC,
+Variable length packet max size 64 bytes
+Set power level
+Set to RX mode
+
+Transmit settings
+Set TxStartCondition to 1. When in TX mode it will wait until the first byte is written to the FIFO 
+before it sends the preamble
+
+TX steps:
+Set mode to TX
+Interrupt when in TX state
+Write radio msg starting with length field
+
+RX steps:
+Set mode to RX
+Interrupt when packet received
+Read packet - process
+
+
+The DAGC is enabled by setting RegTestDagc to 0x20 for low modulation index systems (i.e. when AfcLowBetaOn=1,
+refer to section 3.4.16), and 0x30 for other systems. It is recommended to always enable the DAGC.
