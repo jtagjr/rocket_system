@@ -486,6 +486,7 @@ const uint16_t DAYS_SINCE_MONTH[4][16] = { { 0, 0, 31, 60, 91, 121, 152, 182, 21
     0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 334, 334, 334 }, };
 
 void EnableGPS();
+void DisableGPS();
 void ConfigureGpsI2C();
 void ConfigureGpsTX();
 void SetNavigationSolutionMessageRate();

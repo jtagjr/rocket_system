@@ -211,27 +211,28 @@ void DataCollector::StartSensorSampling(){
   // Accel Int 1 Low Acc
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
   // Accel 1 INT 2
+  // Shared with Radio interrupt
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
   // +-32g not +-16g
   lowA.startHighSpeedSampling(FS_XL_16g, ODR_XL_208Hz, FS_G_1000dps, ODR_GYRO_208Hz, FIFO_BDR_ACC_208Hz, FIFO_BDR_GYRO_208Hz, 96);
 
-
   StartPressureSensor(&osr_odr_press_cfg, &barometer);
 }
 
 void DataCollector::StopSensorSampling(){
+  DisableGPS();
+  lowA.sleep();
+  if (StopPressureSensor(&barometer)) {
+    PRINTLN("Pressure sensor failed to enter deep standby");
+  }
+
   HAL_NVIC_DisableIRQ(EXTI0_IRQn);
   HAL_NVIC_DisableIRQ(EXTI2_IRQn);
 
   // Accel Int 1 Low Acc
   HAL_NVIC_DisableIRQ(EXTI4_IRQn);
-  HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
-
-  lowA.sleep();
-  if (BMP5_INTF_RET_SUCCESS != bmp5_set_power_mode(BMP5_POWERMODE_DEEP_STANDBY, &barometer)) {
-    PRINTLN("Pressure sensor failed to enter deep standby");
-  }
+  // EXTI15_10_IRQn is shared with Radio interrupt. Don't disable it
 }
 
 bool DataCollector::ReadAccelerometerFifo(LSM6DSO& sensor, uint16_t& numberOfSensorDataReady, FifoStatusBits& statusBits){

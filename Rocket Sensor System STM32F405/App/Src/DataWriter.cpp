@@ -8,12 +8,12 @@
 #include "DataWriter.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <fstream>
 
 #include "main.h"
 #include "fatfs.h"
 
-#include "DataSample.h"
 #include "Global.h"
 
 extern FATFS fs;
@@ -32,6 +32,15 @@ DataWriter::DataWriter(){
 
 DataWriter::~DataWriter(){
 
+}
+
+void DataWriter::SaveSensorData(const Message& msg) {
+  TP3_On();
+  if (is_writing) {
+    WriteBuffer(msg.buffer, msg.length);
+  }
+  TP3_Off();
+  BufferSaved(msg.meta_data, msg.length, msg.buffer);
 }
 
 void DataWriter::WriteBuffer(void* buffer, uint32_t length){
@@ -86,21 +95,21 @@ void DataWriter::Run(){
 
     switch (queue_item.msg.id) {
       case static_cast<uint8_t>(TaskMsg::SAVE_BUFFER):
-        TP3_On();
-        WriteBuffer(queue_item.msg.buffer, queue_item.msg.length);
-        BufferSaved(queue_item.msg.meta_data, queue_item.msg.length, queue_item.msg.buffer);
-        TP3_Off();
+        SaveSensorData(queue_item.msg);
         break;
 
       case static_cast<uint8_t>(TaskMsg::SEND_STATS):
+        strcpy(static_cast<char*>(queue_item.msg.buffer), "Data Writer stats not implemented");
         WriteStatsDataWriter(0, queue_item.msg.buffer);
         break;
 
       case static_cast<uint8_t>(TaskMsg::START):
+        is_writing = true;
         StartWriting();
         break;
 
       case static_cast<uint8_t>(TaskMsg::STOP):
+        is_writing = false;
         StopWriting();
         break;
 

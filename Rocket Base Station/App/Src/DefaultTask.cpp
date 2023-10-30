@@ -9,12 +9,13 @@
 #include <stdio.h>
 #include "task.h"
 #include "Clock.h"
+#include "Messages.h"
 
 extern "C" {
 
 void ProcessUsbRxData();
 void TransmitData(uint32_t timeout);
-void SendStartDataStream();
+void HandleUsbMessage(uint8_t id);
 
 uint16_t DebugHighwaterMark();
 
@@ -127,70 +128,18 @@ void UpperLayerTxComplete(uint8_t* packet, uint16_t len) {
 
 }
 
-enum class MissionMsgId : uint8_t {
-  Calibrate = 1,
-  StartDataStream = 2,
-  StopDataStream = 3,
-  StartMission = 4,
-  StopMission = 5,
-};
-
-void HandleCalibrate() {
-  // Send calibrate radio packet
-}
-
-void HandleStartDataStream() {
-  // Send start data stream radio packet
-  SendStartDataStream();
-}
-
-void HandleStopDataStream() {
-  // Send stop data stream radio packet
-}
-
-void HandleStartMission() {
-  // Send start mission stream radio packet
-}
-
-void HandleStopMission() {
-  // Send stop mission stream radio packet
-}
-
 void ProcessPacket() {
   uint8_t length = rx_packet[rx_read_index++];
   if (rx_read_index >= usb_buffer_length) {
     rx_read_index = 0;
   }
 
-  auto id = static_cast<MissionMsgId>(rx_packet[rx_read_index++]);
+  auto id = rx_packet[rx_read_index++];
   if (rx_read_index >= usb_buffer_length) {
     rx_read_index = 0;
   }
 
-  switch (id) {
-    case MissionMsgId::Calibrate:
-      HandleCalibrate();
-      break;
-
-    case MissionMsgId::StartDataStream:
-      HandleStartDataStream();
-      break;
-
-    case MissionMsgId::StopDataStream:
-      HandleStopDataStream();
-      break;
-
-    case MissionMsgId::StartMission:
-      HandleStartMission();
-      break;
-
-    case MissionMsgId::StopMission:
-      HandleStopMission();
-      break;
-
-    default:
-      break;
-  }
+  HandleUsbMessage(id);
 }
 
 void ProcessUsbRxData() {

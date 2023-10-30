@@ -39,6 +39,8 @@ private:
   void HandleSendDeviceStatus(uint8_t* msg, uint16_t length);
   void HandleRunCalibrartion(uint8_t* msg, uint16_t length);
   void HandleSendSensorData(uint8_t* msg, uint16_t length);
+  void HandleEngageDataStreaming(uint8_t* msg, uint16_t length);
+  void HandleDisengageDataStreaming(uint8_t* msg, uint16_t length);
   void HandleEngageFlightMode(uint8_t* msg, uint16_t length);
   void HandleDisengageFlightMode(uint8_t* msg, uint16_t length);
   void HandleEngageLowPower(uint8_t* msg, uint16_t length);

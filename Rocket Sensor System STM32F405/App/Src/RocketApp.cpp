@@ -58,15 +58,31 @@ void RocketApp::HandleSendSensorData(uint8_t* msg, uint16_t length) {
 }
 
 void RocketApp::HandleEngageFlightMode(uint8_t* msg, uint16_t length) {
-  StartDataWriter();
-  StartDataCollector();
   msg[0] = static_cast<uint8_t>(CommandId::FLIGHT_MODE_ENGAGED);
   SendOutgoingRadioPacket(1, msg);
-  // Start 1 second timer/interrupt for status updates
+  StartDataWriter();
+  StartDataCollector();
   StartStatusUpdatesTimer();
 }
 
 void RocketApp::HandleDisengageFlightMode(uint8_t* msg, uint16_t length) {
+  msg[0] = static_cast<uint8_t>(CommandId::FLIGHT_MODE_DISENGAGED);
+  StopDataCollector();
+  StopDataWriter();
+  StopStatusUpdatesTimer();
+}
+
+void RocketApp::HandleEngageDataStreaming(uint8_t* msg, uint16_t length) {
+  msg[0] = static_cast<uint8_t>(CommandId::STREAMING_MODE_ENGAGED);
+  SendOutgoingRadioPacket(1, msg);
+  StartDataCollector();
+  StartStatusUpdatesTimer();
+}
+
+void RocketApp::HandleDisengageDataStreaming(uint8_t* msg, uint16_t length) {
+  msg[0] = static_cast<uint8_t>(CommandId::STREAMING_MODE_DISENGAGED);
+  SendOutgoingRadioPacket(1, msg);
+  StopDataCollector();
   StopStatusUpdatesTimer();
 }
 
@@ -111,6 +127,14 @@ void RocketApp::ProcessRadioMessage(uint8_t* msg, uint16_t length) {
 
     case CommandId::SEND_SENSORS_STATUS:
     HandleSendSensorData(msg, length);
+    break;
+
+    case CommandId::ENGAGE_DATA_STREAMING_MODE:
+    HandleEngageDataStreaming(msg, length);
+    break;
+
+    case CommandId::DISENGAGE_DATA_STREAMING_MODE:
+    HandleDisengageDataStreaming(msg, length);
     break;
 
     case CommandId::ENGAGE_FLIGHT_MODE:

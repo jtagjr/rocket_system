@@ -11,6 +11,8 @@
 #include <Rfm69.h>
 #include "cmsis_os2.h"
 
+#include "Messages.h"
+
 class RadioComms
 {
 public:
@@ -24,8 +26,8 @@ private:
 	void HandleRadioPacketReceived();
 	void HandleRadioSendStatusMsg();
 	void HandleRadioInterrupt();
-	void HandleRadioTick();
-	void HandleSendStartDataStream();
+	void ForwardMissiongControlMsg(const MissionMsgId id);
+	void ProcessRadioMessage(uint8_t* msg, uint16_t length);
 
 	RFM69 radio;
 	enum class State : uint8_t {

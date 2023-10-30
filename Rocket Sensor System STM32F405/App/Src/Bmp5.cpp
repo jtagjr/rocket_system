@@ -1920,6 +1920,10 @@ int8_t StartPressureSensor(struct bmp5_osr_odr_press_config* osr_odr_press_cfg, 
   return rslt;
 }
 
+int8_t StopPressureSensor(struct bmp5_dev* dev) {
+  return bmp5_set_power_mode(BMP5_POWERMODE_DEEP_STANDBY, dev);
+}
+
 int8_t initialize_barometer(struct bmp5_dev* dev, struct bmp5_osr_odr_press_config* osr_odr_press_cfg){
   int8_t rslt = bmp5_init(dev);
   uint8_t count = 0;

@@ -66,6 +66,7 @@ extern "C" {
    * @brief Initialize the sensor and device structure
    */
   int8_t StartPressureSensor(struct bmp5_osr_odr_press_config* osr_odr_press_cfg, struct bmp5_dev* dev);
+  int8_t StopPressureSensor(struct bmp5_dev* dev);
   int8_t initialize_barometer(struct bmp5_dev* dev, struct bmp5_osr_odr_press_config* osr_odr_press_cfg);
 
   /*!

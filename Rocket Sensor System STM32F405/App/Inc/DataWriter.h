@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include "cmsis_os2.h"
 
+#include "DataSample.h"
+
 class DataWriter {
 public:
   DataWriter();
@@ -21,8 +23,11 @@ public:
 private:
 
   void StartWriting();
+  void SaveSensorData(const Message& msg);
   void WriteBuffer(void* buffer, uint32_t length);
   void StopWriting();
+
+  bool is_writing;
 };
 
 #endif /* SRC_DATAWRITER_H_ */

@@ -96,13 +96,21 @@ void RadioComms::HandleRadioPacketReceived(){
     PRINTLN("Radio Receiver read packet failed");
     radio.clearFIFO();
   }
+  ProcessIncomingRadioPacket(RadioPacketLength, received_packet);
   OffLedTwo();
-
 }
 
 void RadioComms::HandleSendOutgoingMessage(uint8_t* buffer, uint16_t length){
-  radio.setMode(RFM69_MODE_STANDBY);
+  radio.setMode(RFM69_MODE_TX);
+  osDelay(1);
   radio.send(buffer, length);
+
+  bool sent = false;
+  if (radio.packetSent(sent, 2000)) {
+    PRINTLN("Packet Sent");
+  }
+
+  radio.setMode(RFM69_MODE_RX);
 }
 
 void RadioComms::HandleTxReady(){
@@ -169,11 +177,13 @@ void RadioComms::HandleRadioInterrupt()
     }
 
     if (irq2 & RF_IRQFLAGS2_PACKETSENT) {
+      radio.setMode(RFM69_MODE_STANDBY);
+      radio.setMode(RFM69_MODE_RX);
       PRINTLN("Packet Sent");
     }
 
     if (irq2 & RF_IRQFLAGS2_PAYLOADREADY) {
-      PRINTLN("Packet Sent");
+      PRINTLN("Payload Ready");
     }
 
     if (irq2 & RF_IRQFLAGS2_CRCOK) {
@@ -182,11 +192,8 @@ void RadioComms::HandleRadioInterrupt()
     }
 
     if (irq2 & RF_IRQFLAGS2_LOWBAT) {
-      PRINTLN("CRC OK");
+      PRINTLN("Low Bat");
     }
-
-    radio.setMode(RFM69_MODE_STANDBY);
-    radio.setMode(RFM69_MODE_RX);
   }
 }
 

@@ -407,6 +407,11 @@ void EnableGPS(){
   memset(gps_sample_buffers, 0, sizeof(gps_sample_buffers));
 }
 
+void DisableGPS(){
+  HAL_GPIO_WritePin(GPS_RESET_GPIO_Port, GPS_RESET_Pin, GPIO_PIN_RESET);
+  memset(gps_sample_buffers, 0, sizeof(gps_sample_buffers));
+}
+
 void ConfigureGpsTX(){ //115200
   char base[] = "PUBX,41,1,0003,0001,115200,0"; // Output only UBX on GPS TX pin
   auto checksum = NMEA_Checksum(base, sizeof(base) - 1);

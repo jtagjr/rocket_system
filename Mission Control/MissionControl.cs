@@ -79,7 +79,7 @@ namespace Mission_Control
             {
                 byte[] msg = new byte[4];
                 msg[0] = 1; // Length
-                msg[1] = 2; // Start Data Stream ID
+                msg[1] = 6; // Start Data Stream ID
                 serial_port.Write(msg, 0, msg.Length);
             }
         }
@@ -90,7 +90,7 @@ namespace Mission_Control
             {
                 byte[] msg = new byte[4];
                 msg[0] = 1; // Length
-                msg[1] = 3; // Stop Data Stream ID
+                msg[1] = 7; // Stop Data Stream ID
                 serial_port.Write(msg, 0, msg.Length);
             }
         }
@@ -101,7 +101,7 @@ namespace Mission_Control
             {
                 byte[] msg = new byte[4];
                 msg[0] = 1; // Length
-                msg[1] = 4; // Start Data Stream ID
+                msg[1] = 8; // Start Data Stream ID
                 serial_port.Write(msg, 0, msg.Length);
             }
         }
@@ -112,7 +112,7 @@ namespace Mission_Control
             {
                 byte[] msg = new byte[4];
                 msg[0] = 1; // Length
-                msg[1] = 5; // Stop Data Stream ID
+                msg[1] = 9; // Stop Data Stream ID
                 serial_port.Write(msg, 0, msg.Length);
             }
         }

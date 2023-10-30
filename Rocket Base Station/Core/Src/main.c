@@ -83,7 +83,7 @@ const osThreadAttr_t RadioComms_attributes = {
 };
 /* Definitions for RadioCommsQueue */
 osMessageQueueId_t RadioCommsQueueHandle;
-uint8_t RadioCommsQueueBuffer[ 16 * sizeof( uint8_t ) ];
+uint8_t RadioCommsQueueBuffer[ 16 * sizeof( uint64_t ) ];
 osStaticMessageQDef_t RadioCommsQueueControlBlock;
 const osMessageQueueAttr_t RadioCommsQueue_attributes = {
   .name = "RadioCommsQueue",
@@ -203,7 +203,7 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of RadioCommsQueue */
-  RadioCommsQueueHandle = osMessageQueueNew (16, sizeof(uint8_t), &RadioCommsQueue_attributes);
+  RadioCommsQueueHandle = osMessageQueueNew (16, sizeof(uint64_t), &RadioCommsQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -341,7 +341,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
