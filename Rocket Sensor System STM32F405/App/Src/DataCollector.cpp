@@ -266,7 +266,7 @@ void DataCollector::HandleImuInterrupt(){
       uint16_t length = GetImuSampleBufferLength();
       current_imu_sample_buffer->header.sample_length = length;
       log_imu_buffer = current_imu_sample_buffer;
-      SaveBuffer(1, length, current_imu_sample_buffer);
+      ::SaveBuffer(1, length, current_imu_sample_buffer);
       SwitchImuBuffers();
     }
 
@@ -302,73 +302,121 @@ void DataCollector::HandleBarometerInterrupt(){
       uint16_t length = GetBarometerSampleBufferLength();
       current_barometer_sample_buffer->header.sample_length = length;
       log_baro_buffer = current_barometer_sample_buffer;
-      SaveBuffer(2, length, current_barometer_sample_buffer);
+      ::SaveBuffer(2, length, current_barometer_sample_buffer);
       SwitchBarometerBuffers();
     }
   }
 }
 
-void DataCollector::GetSensorData(uint8_t* buffer, const uint16_t length) {
-  // buffer payload cannot exceed 66 bytes Radio FIFO length
-  uint8_t i = 0;
-
-  if (log_imu_buffer != nullptr) {
-    if (log_imu_buffer->header.sample_number > 0) {
-      const auto* data = &(log_imu_buffer->sample[log_imu_buffer->header.sample_number-1]);
-      memcpy(buffer, data, sizeof(FifoData));
-    } else {
-      memset(buffer, 0xFF, sizeof(FifoData));
+void DataCollector::SaveBuffer(TaskMessage& queue_item) {
+  if (queue_item.msg.meta_data == 1) {
+    ImuFileEntry** buffer = current_imu_sample_buffer == nullptr ? &current_imu_sample_buffer : &next_imu_sample_buffer;
+    *buffer = static_cast<ImuFileEntry*>(queue_item.msg.buffer);
+    if (log_imu_buffer != *buffer){
+      (*buffer)->header.sample_length = 0;
+      (*buffer)->header.sample_number = 0;
     }
-    i += sizeof(FifoData);
+  } else if (queue_item.msg.meta_data == 2) {
+    BarometerFileEntry** buffer = current_barometer_sample_buffer == nullptr ? &current_barometer_sample_buffer : &next_barometer_sample_buffer;
+    *buffer = static_cast<BarometerFileEntry*>(queue_item.msg.buffer);
+    if (log_baro_buffer != *buffer){
+      (*buffer)->header.sample_length = 0;
+      (*buffer)->header.sample_number = 0;
+    }
+  } else if (queue_item.msg.meta_data == 3) {
+    GpsBufferSaved(queue_item.msg.buffer);
   }
-  // payload is now 8 bytes
+}
 
+void WriteImu(const FifoData& data, uint8_t* buffer) {
+  int i = 0;
+  buffer[i++] = data.tag;
+  buffer[i++] = (data.x >> 8);
+  buffer[i++] = data.x;
+  buffer[i++] = (data.y >> 8);
+  buffer[i++] = data.y;
+  buffer[i++] = (data.z >> 8);
+  buffer[i++] = data.z;
+}
+
+void CopyInt(uint8_t* buffer, int32_t data) {
+  int i = 0;
+  buffer[i++] = data >> 24;
+  buffer[i++] = data >> 16;
+  buffer[i++] = data >> 8;
+  buffer[i] = data;
+}
+
+void DataCollector::SendSensorData() {
+  // buffer payload cannot exceed 66 bytes Radio FIFO length
+  static constexpr uint8_t RadioFifoLength{66};
+  static constexpr uint8_t SensorMsgId{20};
+  static uint8_t buffer[RadioFifoLength];
+  buffer[1] = SensorMsgId;
+  memset(&buffer[2], 0xFF, RadioFifoLength-2);
+  uint8_t i = 2;
+  // Look for last tag 2 (accel) and tag 1 (gyro) then add those samples
+  // Don't add tag and pad need to save space
+  if (log_imu_buffer != nullptr) {
+    if (log_imu_buffer->header.sample_number > 1) {
+      const auto* data = &(log_imu_buffer->sample[log_imu_buffer->header.sample_number-2]);
+      WriteImu(*data++, &buffer[i]);
+      i += sizeof(FifoData)-1;
+      WriteImu(*data, &buffer[i]);
+      i += sizeof(FifoData)-1;
+    }
+  } else {
+    buffer[i] = 1;
+    i += 7;
+    buffer[i] = 2;
+    i += 7;
+  }
+
+  // payload is now 2 + 14 bytes
+
+  // Only add uint32_t temp and uint32_t pressure
   if (log_baro_buffer != nullptr) {
     if (log_baro_buffer->header.sample_number > 0) {
-      const auto* data = &(log_baro_buffer->sample[log_imu_buffer->header.sample_number-1]);
-      memcpy(&buffer[i], data, sizeof(BarometerSample));
-    } else {
-      memset(&buffer[i], 0xFF, sizeof(BarometerSample));
+      const auto* data = &(log_baro_buffer->sample[log_baro_buffer->header.sample_number-1]);
+      int32_t tmp = (int32_t)(data->celsius * 1000);
+      CopyInt(&buffer[i], tmp);
+      i += sizeof(data->celsius);
+
+      tmp = (int32_t(data->pascals * 1000));
+      CopyInt(&buffer[i], tmp);
+      i += sizeof(data->pascals);
     }
-    i += sizeof(BarometerSample);
+  } else {
+    i += 8;
   }
-  // payload is now 24 bytes
+  // payload is now 16 + 8 bytes
 
   const auto* gps = GpsSample();
   if (gps != nullptr) {
-    memcpy(&buffer[i], (void*)&(gps->sample.week), sizeof(gps->sample.week));
-    i += sizeof(gps->sample.week);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.gpsFix), sizeof(gps->sample.gpsFix));
-    i += sizeof(gps->sample.gpsFix);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.ecefX), sizeof(gps->sample.ecefX));
+    buffer[i++] = gps->sample.gpsFix;
+    CopyInt(&buffer[i], gps->sample.ecefX);
     i += sizeof(gps->sample.ecefX);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.ecefY), sizeof(gps->sample.ecefY));
+    CopyInt(&buffer[i], gps->sample.ecefY);
     i += sizeof(gps->sample.ecefY);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.ecefZ), sizeof(gps->sample.ecefZ));
+    CopyInt(&buffer[i], gps->sample.ecefZ);
     i += sizeof(gps->sample.ecefZ);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.pAcc), sizeof(gps->sample.pAcc));
+    CopyInt(&buffer[i], gps->sample.pAcc);
     i += sizeof(gps->sample.pAcc);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.eceVX), sizeof(gps->sample.eceVX));
+    CopyInt(&buffer[i], gps->sample.eceVX);
     i += sizeof(gps->sample.eceVX);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.eceVY), sizeof(gps->sample.eceVY));
+    CopyInt(&buffer[i], gps->sample.eceVY);
     i += sizeof(gps->sample.eceVY);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.eceVZ), sizeof(gps->sample.eceVZ));
+    CopyInt(&buffer[i], gps->sample.eceVZ);
     i += sizeof(gps->sample.eceVZ);
-
-    memcpy(&buffer[i], (void*)&(gps->sample.sAcc), sizeof(gps->sample.sAcc));
+    CopyInt(&buffer[i], gps->sample.sAcc);
     i += sizeof(gps->sample.sAcc);
-
-    // payload is now 59 bytes
-    SensorDataRocketApp(i, buffer);
+  } else {
+    i += 33;
   }
+
+  // payload is now 24 + 33 bytes
+  buffer[0] = i;
+  SendOutgoingSensorPacket(i, buffer);
 }
 
 extern "C" void StartDataCollectionTask(){
@@ -412,31 +460,15 @@ void DataCollector::Run(){
       break;
 
     case static_cast<uint8_t>(TaskMsg::SAVED_BUFFER):
-      if (queue_item.msg.meta_data == 1) {
-        ImuFileEntry** buffer = current_imu_sample_buffer == nullptr ? &current_imu_sample_buffer : &next_imu_sample_buffer;
-        *buffer = static_cast<ImuFileEntry*>(queue_item.msg.buffer);
-        if (log_imu_buffer != *buffer){
-          (*buffer)->header.sample_length = 0;
-          (*buffer)->header.sample_number = 0;
-        }
-      } else if (queue_item.msg.meta_data == 2) {
-        BarometerFileEntry** buffer = current_barometer_sample_buffer == nullptr ? &current_barometer_sample_buffer : &next_barometer_sample_buffer;
-        *buffer = static_cast<BarometerFileEntry*>(queue_item.msg.buffer);
-        if (log_baro_buffer != *buffer){
-          (*buffer)->header.sample_length = 0;
-          (*buffer)->header.sample_number = 0;
-        }
-      } else if (queue_item.msg.meta_data == 3) {
-        GpsBufferSaved(queue_item.msg.buffer);
-      }
+      SaveBuffer(queue_item);
       break;
 
     case static_cast<uint8_t>(TaskMsg::SEND_STATS):
       LogData(static_cast<char*>(queue_item.msg.buffer), static_cast<int>(queue_item.msg.length));
       break;
 
-    case static_cast<uint8_t>(TaskMsg::GET_SENSOR_DATA):
-      GetSensorData(static_cast<uint8_t*>(queue_item.msg.buffer), queue_item.msg.length);
+    case static_cast<uint8_t>(TaskMsg::SEND_SENSOR_PACKET):
+      SendSensorData();
       break;
 
     case static_cast<uint8_t>(TaskMsg::START):

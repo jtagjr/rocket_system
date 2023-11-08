@@ -37,13 +37,23 @@ namespace Mission_Control
                                 accel_z, 
                                 rads_x, 
                                 rads_y, 
-                                rads_z, 
-                                ready_rb, 
-                                ready_rb, 
+                                rads_z,
+                                cal_rb,
+                                streaming_rb, 
                                 flight_rb, 
                                 deploy_rb, 
-                                landed_rb, 
-                                log_screen, 
+                                landed_rb,
+                                temp,
+                                pressure,
+                                gpsFix,
+                                ecefx,
+                                ecefy,
+                                ecefz,
+                                accuracy_position,
+                                ecevx,
+                                ecevy,
+                                ecevz,
+                                accuracy_speed,
                                 Dispatcher);
         }
 
@@ -75,6 +85,28 @@ namespace Mission_Control
         private void PortSelected(object sender, RoutedEventArgs e)
         {
             control.OpenPort(seriaPortList.SelectedIndex);
+        }
+
+        private void MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var button = sender as Button;
+            if (button != null)
+            {
+                var brush = button.Background;
+                brush.Opacity = 0.6;
+                button.Background = brush;
+            }
+        }
+
+        private void MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var button = sender as Button;
+            if (button != null)
+            {
+                var brush = button.Background;
+                brush.Opacity = 1;
+                button.Background = brush;
+            }
         }
     }
 }

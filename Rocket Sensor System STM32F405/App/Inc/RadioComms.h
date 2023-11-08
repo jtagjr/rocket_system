@@ -30,6 +30,7 @@ private:
 
   void HandleSendOutgoingMessage(uint8_t* buffer, uint16_t length);
   void HandleRadioPacketReceived();
+  void HandleSendOutgoingSensorData(uint8_t* buffer, uint16_t length);
 
   RFM69 radio;
 

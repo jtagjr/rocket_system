@@ -5,35 +5,119 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Mission_Control"
         mc:Ignorable="d"
-        Title="Mission Control" Height="600" Width="1000">
+        Title="Mission Control" Height="1000" Width="700" ResizeMode="NoResize">
     <Grid>
-        <Label Content="Rocket State" HorizontalAlignment="Left" Margin="25,25,0,0" VerticalAlignment="Top" Width="84"/>
-        <RadioButton Name="ready_rb" Content="Ready" HorizontalAlignment="Left" Margin="34,55,0,0" VerticalAlignment="Top" GroupName="RocketStateRadioButton"/>
-        <RadioButton Name="flight_rb" Content="Flight" HorizontalAlignment="Left" Margin="34,80,0,0" VerticalAlignment="Top" GroupName="RocketStateRadioButton"/>
-        <RadioButton Name="deploy_rb" Content="Deploy" HorizontalAlignment="Left" Margin="34,105,0,0" VerticalAlignment="Top" GroupName="RocketStateRadioButton"/>
-        <RadioButton Name="landed_rb" Content="Landed" HorizontalAlignment="Left" Margin="34,130,0,0" VerticalAlignment="Top" GroupName="RocketStateRadioButton"/>
+        <Rectangle Width="700" Height="1000">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0">
 
-        <Label Content="Acceleration" HorizontalAlignment="Left" Margin="150,25,0,0" VerticalAlignment="Top"/>
-        <Label Name="accel_x" Content="X" HorizontalAlignment="Left" Margin="150,55,0,0" VerticalAlignment="Top"/>
-        <Label Name="accel_y" Content="Y" HorizontalAlignment="Left" Margin="150,80,0,0" VerticalAlignment="Top"/>
-        <Label Name="accel_z" Content="Z" HorizontalAlignment="Left" Margin="150,105,0,0" VerticalAlignment="Top"/>
-
-        <Label Content="Rads/Sec" HorizontalAlignment="Left" Margin="250,25,0,0" VerticalAlignment="Top" Width="63"/>
-        <Label Name="rads_x" Content="X" HorizontalAlignment="Left" Margin="250,55,0,0" VerticalAlignment="Top"/>
-        <Label Name="rads_y" Content="Y" HorizontalAlignment="Left" Margin="250,80,0,0" VerticalAlignment="Top"/>
-        <Label Name="rads_z" Content="Z" HorizontalAlignment="Left" Margin="250,105,0,0" VerticalAlignment="Top"/>
-
-        <Label Content="Log" Name="logTextBox" HorizontalContentAlignment="Center" HorizontalAlignment="Left" Margin="436,24,0,0" VerticalAlignment="Top" Width="554" Height="26"/>
-        <ScrollViewer Margin="436,50,10,10">
-            <TextBlock Name="log_screen" Text="TextBlock" TextWrapping="Wrap" />
-        </ScrollViewer>
-        <Button Content="Calibrate" Click="CalibrateClick" HorizontalAlignment="Left" Margin="34,200,0,0" VerticalAlignment="Top" Height="51" Width="75"/>
-        <Button Content="Start Streaming Data" Click="StartDataStreamClick"  HorizontalAlignment="Left" Margin="34,272,0,0" VerticalAlignment="Top" Height="51" Width="152"/>
-        <Button Content="Stop Streaming Data" Click="StopDataStreamClick"  HorizontalAlignment="Left" Margin="34,349,0,0" VerticalAlignment="Top" Height="51" Width="152"/>
-        <Button Content="Start Mission" Click="StartMissionClick"  HorizontalAlignment="Left" Margin="231,272,0,0" VerticalAlignment="Top" Height="51" Width="152"/>
-        <Button Content="Stop Mission" Click="StopMissionClick"  HorizontalAlignment="Left" Margin="231,349,0,0" VerticalAlignment="Top" Height="51" Width="152"/>
-        <ListBox Name="seriaPortList" SelectionChanged="PortSelected" Loaded="SerialListLoaded" HorizontalAlignment="Left" Margin="75,437,0,0" VerticalAlignment="Top" Height="107" Width="205"/>
-
-
+                    <!-- This gradient stop is partially transparent. -->
+                    <GradientStop Color="#FF004ff9" Offset="0.0" />
+                    
+                    <!-- This gradient stop is fully opaque. -->
+                    <GradientStop Color="#FF428ff4" Offset="1.0" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="25">
+            <Label Content="Rocket State" HorizontalAlignment="Left" VerticalAlignment="Top" Width="84" Foreground="WhiteSmoke"/>
+            <Grid Height="10"/>
+            <RadioButton Name="cal_rb" Content="Calibrating" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="WhiteSmoke" GroupName="RocketStateRadioButton" Width="111"/>
+            <Grid Height="10"/>
+            <RadioButton Name="streaming_rb" Content="Streaming" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="WhiteSmoke" GroupName="RocketStateRadioButton"/>
+            <Grid Height="10"/>
+            <RadioButton Name="flight_rb" Content="Flight" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="WhiteSmoke" GroupName="RocketStateRadioButton"/>
+            <Grid Height="10"/>
+            <RadioButton Name="deploy_rb" Content="Deploy" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="WhiteSmoke" GroupName="RocketStateRadioButton"/>
+            <Grid Height="10"/>
+            <RadioButton Name="landed_rb" Content="Landed" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="WhiteSmoke" GroupName="RocketStateRadioButton"/>
+            <Grid Height="50"/>
+            <Button Content="Start Calibration" Click="CalibrateClick" MouseLeftButtonDown="MouseLeftButtonDown"  MouseLeftButtonUp="MouseLeftButtonUp" HorizontalAlignment="Left" Height="51" Width="152"/>
+            <Grid Height="50"/>
+            <Button Content="Start Streaming" Click="StartDataStreamClick" MouseLeftButtonDown="MouseLeftButtonDown"  MouseLeftButtonUp="MouseLeftButtonUp"  HorizontalAlignment="Left" Height="51" Width="152"/>
+            <Grid Height="30"/>
+            <Button Content="Stop Streaming" Click="StopDataStreamClick" MouseLeftButtonDown="MouseLeftButtonDown"  MouseLeftButtonUp="MouseLeftButtonUp"  HorizontalAlignment="Left" Height="51" Width="152"/>
+            <Grid Height="50"/>
+            <TextBox HorizontalAlignment="Left" Height="46" TextWrapping="Wrap" Text="Mission File Name" VerticalAlignment="Top" Width="152"/>
+            <Grid Height="30"/>
+            <Button Content="Start Mission" Click="StartMissionClick" MouseLeftButtonDown="MouseLeftButtonDown"  MouseLeftButtonUp="MouseLeftButtonUp"  HorizontalAlignment="Left" Height="51" Width="152"/>
+            <Grid Height="30"/>
+            <Button Content="Stop Mission" Click="StopMissionClick" MouseLeftButtonDown="MouseLeftButtonDown"  MouseLeftButtonUp="MouseLeftButtonUp"  HorizontalAlignment="Left" Height="51" Width="152"/>
+            <Grid Height="50"/>
+            <Label Content="Serial Ports" Foreground="WhiteSmoke" />
+            <Grid Height="10"/>
+            <ListBox Name="seriaPortList" SelectionChanged="PortSelected" Loaded="SerialListLoaded" HorizontalAlignment="Left" Height="107" Width="205"/>
+        </StackPanel>
+        <StackPanel Orientation="Vertical"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="300,25,0,0" Width="240" >
+            <Label Content="Acceleration" HorizontalAlignment="Left" Foreground="WhiteSmoke" />
+            <StackPanel Orientation="Horizontal">
+                <Label Content="X" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="accel_x" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Y" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="accel_y" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Z" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="accel_z" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <Grid Height="50"/>
+            <Label Content="Rads/Sec" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="X" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="rads_x" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Y" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="rads_y" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Z" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="rads_z" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <Grid Height="50"/>
+            <Label Content="Barometer" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Celsius" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="temp" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Pascals" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="pressure" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <Grid Height="50"/>
+            <Label Content="GPS" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="GPS Fix" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="gpsFix" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="ECEF X" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="ecefx" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="ECEF Y" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="ecefy" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="ECEF Z" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="ecefz" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <Label Name="accuracy_position" Content="Position Accuracy" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="ECEV X" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="ecevx" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="ECEV Y" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="ecevy" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="ECEV Z" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+                <Label Name="ecevz" Content="" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+            </StackPanel>
+            <Label Name="accuracy_speed" Content="Speed Accuracy" HorizontalAlignment="Left" Foreground="WhiteSmoke"/>
+        </StackPanel>
     </Grid>
 </Window>

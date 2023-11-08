@@ -24,11 +24,7 @@ enum class CommandId : uint8_t{
 
 
   // To External Device from RadioApp
-  STREAMING_MODE_ENGAGED,
-  STREAMING_MODE_DISENGAGED,
-  FLIGHT_MODE_ENGAGED,
-  FLIGHT_MODE_DISENGAGED,
-  SENSOR_DATA,
+  SENSOR_DATA = 20,
 };
 
 static constexpr uint8_t RadioPacketLength{64};

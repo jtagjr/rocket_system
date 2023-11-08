@@ -81,8 +81,8 @@ void SendStatsDataCollector(uint16_t length, void* buffer){
   SendBuffer(DataCollectionQueueHandle, TaskMsg::SEND_STATS, 0, length, buffer);
 }
 
-void GetSensorData(uint16_t length, void* buffer) {
-  SendBuffer(DataCollectionQueueHandle, TaskMsg::GET_SENSOR_DATA, 0, length, buffer);
+void SendSensorPacket(uint8_t index, uint16_t length, void* buffer) {
+  SendBuffer(DataCollectionQueueHandle, TaskMsg::SEND_SENSOR_PACKET, 0, 0, nullptr);
 }
 
 void HandleIrq_ACCEL1_INT1_Pin(){
@@ -137,6 +137,10 @@ void SendOutgoingRadioPacket(uint16_t length, void* buffer){
   SendBuffer(RadioCommsQueueHandle, TaskMsg::SEND_OUTGOING_MSG, 0, length, buffer);
 }
 
+void SendOutgoingSensorPacket(uint16_t length, void* buffer) {
+  SendBuffer(RadioCommsQueueHandle, TaskMsg::SEND_OUTGOING_SENSOR_DATA, 0, length, buffer);
+}
+
 void SendStatsRadioComms(uint16_t length, void* buffer){
   SendBuffer(RadioCommsQueueHandle, TaskMsg::SEND_STATS, 0, length, buffer);
 }
@@ -162,16 +166,8 @@ void ProcessIncomingRadioPacket(uint16_t length, void* buffer){
   SendBuffer(RocketAppQueueHandle, TaskMsg::RECEIVED_RADIO_MSG, 0, length, buffer);
 }
 
-void SendStatusUpdate() {
-  SendBuffer(RocketAppQueueHandle, TaskMsg::SEND_STATUS_UPDATE, 0, 0, nullptr);
-}
-
 void SendStatsRocketApp(uint16_t length, void* buffer){
   SendBuffer(RocketAppQueueHandle, TaskMsg::SEND_STATS, 0, length, buffer);
-}
-
-void SensorDataRocketApp(uint16_t length, void* buffer) {
-  SendBuffer(RocketAppQueueHandle, TaskMsg::SENSOR_DATA, 0, length, buffer);
 }
 
 }

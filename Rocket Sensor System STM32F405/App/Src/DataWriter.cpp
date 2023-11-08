@@ -57,21 +57,27 @@ void DataWriter::WriteBuffer(void* buffer, uint32_t length){
 }
 
 void DataWriter::StartWriting(){
-  int result = f_open(&file, "rocket.bin", FA_CREATE_ALWAYS | FA_WRITE);
-  if (FR_OK == result) {
-    open = true;
-    PRINTLN("Created file rocket.bin");
-  }
-  else {
-    PRINTLN("ERROR DataWriter FAILED TO CREATE FILE rocket_log.bin !!!!!!!!");
+  if (is_writing == false) {
+    int result = f_open(&file, "rocket.bin", FA_CREATE_ALWAYS | FA_WRITE);
+    if (FR_OK == result) {
+      open = true;
+      PRINTLN("Created file rocket.bin");
+    }
+    else {
+      PRINTLN("ERROR DataWriter FAILED TO CREATE FILE rocket_log.bin !!!!!!!!");
+    }
+    is_writing = true;
   }
 }
 
 void DataWriter::StopWriting(){
-  if (open) {
-    f_close(&file);
-    open = false;
-    PRINTLN("Closed file rocket.bin");
+  if (is_writing) {
+    if (open) {
+      f_close(&file);
+      open = false;
+      PRINTLN("Closed file rocket.bin");
+      is_writing = false;
+    }
   }
 }
 
@@ -104,12 +110,10 @@ void DataWriter::Run(){
         break;
 
       case static_cast<uint8_t>(TaskMsg::START):
-        is_writing = true;
         StartWriting();
         break;
 
       case static_cast<uint8_t>(TaskMsg::STOP):
-        is_writing = false;
         StopWriting();
         break;
 

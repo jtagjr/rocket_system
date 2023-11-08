@@ -14,6 +14,30 @@
 
 #include <Global.h>
 
+extern "C" {
+
+osMessageQueueId_t queueHandle;
+
+static uint8_t received_packet[RadioPacketLength];
+uint8_t packet_count = 1;
+
+constexpr uint32_t usb_buffer_length { 64 };
+static_assert(usb_buffer_length == RadioPacketLength, "error buffer length mismatch");
+
+extern uint8_t* UserRxBufferFS; // Data received during ISR is stored here during the callback function CDC_Receive_FS
+extern uint8_t* UserTxBufferFS; // Data to send is store here and retrieved in the callback function CDC_Transmit_FS
+
+uint16_t rx_write_index{0};
+uint8_t rx_next_length{0};
+uint8_t rx_packet[usb_buffer_length];
+uint8_t tx_packet[usb_buffer_length];
+
+extern void CDC_Transmit_FS(uint8_t*, uint16_t);
+
+void ProcessUsbRxData();
+void HandleUsbMessage(uint8_t* data, uint8_t length);
+}
+
 class RadioCommsMessage
 {
 public:
@@ -23,14 +47,10 @@ public:
     STOP_RADIO,
     RADIO_INTERRUPT,
     PRINT_STATS,
+    USB_DATA,
     USB_MSG,
   };
 };
-
-osMessageQueueId_t queueHandle;
-
-static uint8_t received_packet[RadioPacketLength];
-uint8_t packet_count = 1;
 
 extern "C"
 {
@@ -64,10 +84,11 @@ void RadioCommsPrintStats() {
   osMessageQueuePut(queueHandle, &item, 0, 0);
 }
 
-void HandleUsbMessage(uint8_t usb_id) {
+void HandleUsbMessage(uint8_t* data, uint8_t length) {
   TaskMessage item;
   item.msg.id = static_cast<uint8_t>(RadioCommsMessage::USB_MSG);
-  item.msg.meta_data = usb_id;
+  item.msg.length = length;
+  item.msg.buffer = data;
   osMessageQueuePut(queueHandle, &item, 0, 0);
 }
 
@@ -141,7 +162,7 @@ void RadioComms::HandleRadioPacketReceived()
     PRINTLN("Radio Receiver read packet failed");
     radio.clearFIFO();
   }
-  ProcessIncomingRadioPacket(RadioPacketLength, received_packet);
+  CDC_Transmit_FS(received_packet, received_packet[0] + 1);
 }
 
 void RadioComms::HandleRadioSendStatusMsg()
@@ -216,8 +237,7 @@ void RadioComms::HandleRadioInterrupt()
 
     if (irq2 & RF_IRQFLAGS2_PACKETSENT) {
       PRINTLN("Packet Sent");
-      radio.setMode(RFM69_MODE_STANDBY);
-      radio.setMode(RFM69_MODE_RX);
+
     }
 
     if (irq2 & RF_IRQFLAGS2_PAYLOADREADY) {
@@ -235,20 +255,19 @@ void RadioComms::HandleRadioInterrupt()
   }
 }
 
-void RadioComms::ForwardMissiongControlMsg(const MissionMsgId id) {
+void RadioComms::ForwardMissiongControlMsg(const uint8_t* data, const uint8_t length) {
   PRINTLN("Sending start data stream");
   radio.setMode(RFM69_MODE_STANDBY);
   osDelay(1);
   radio.setMode(RFM69_MODE_TX);
-  uint8_t msg = static_cast<uint8_t>(id);
-  radio.send(&msg, 1);
-
-  bool sent = false;
+  radio.send(data, length);
+  bool sent{false};
   if (radio.packetSent(sent, 2000)) {
+    radio.setMode(RFM69_MODE_RX);
     PRINTLN("Packet Sent");
+  } else {
+    radio.setMode(RFM69_MODE_RX);
   }
-
-  radio.setMode(RFM69_MODE_RX);
 }
 
 void RadioComms::Run()
@@ -278,14 +297,8 @@ void RadioComms::Run()
 
         switch (static_cast<uint8_t>(queue_data.msg.id)) {
           case RadioCommsMessage::USB_MSG:
-          ForwardMissiongControlMsg(static_cast<MissionMsgId>(queue_data.msg.meta_data));
+          ForwardMissiongControlMsg(static_cast<uint8_t*>(queue_data.msg.buffer), queue_data.msg.length);
           break;
-
-
-        	break;
-
-
-        	break;
 
           case RadioCommsMessage::RADIO_INTERRUPT:
         	/*
@@ -307,6 +320,57 @@ void RadioComms::Run()
     }
 }
 
+extern "C" {
+
+using ParseFunc = void (*)(const uint8_t);
+
+enum class ParseState : uint8_t {
+  Start,
+  Length,
+  Id,
+  Payload
+};
+
+void UsbParseLength(const uint8_t byte);
+
+ParseState parse_state{ParseState::Start};
+ParseFunc parser_function = UsbParseLength;
+
+
+void UsbParseData(const uint8_t byte) {
+  rx_packet[rx_write_index++] = byte;
+  --rx_next_length;
+  if (rx_next_length == 0) {
+    parser_function = UsbParseLength;
+    HandleUsbMessage(rx_packet, rx_write_index);
+    rx_write_index = 0;
+    rx_next_length = 0;
+  }
+}
+
+void UsbParseLength(const uint8_t byte) {
+  if (byte > 0) {
+    rx_next_length = rx_packet[rx_write_index++] = byte;
+    parser_function = UsbParseData;
+  }
+}
+
+void UsbParsePacket(const uint8_t byte) {
+  (*parser_function)(byte);
+}
+
+// Callback from USB library during ISR
+void UpperLayerRxPacket(uint8_t* packet) {
+  for(uint16_t i=0; i<usb_buffer_length; ++i) {
+    UsbParsePacket(packet[i]);
+  }
+}
+
+void UpperLayerTxComplete(uint8_t* packet, uint16_t len) {
+
+}
+
+}
 
 
 

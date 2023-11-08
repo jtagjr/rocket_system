@@ -21,18 +21,28 @@ namespace Mission_Control
         Label rads_x;
         Label rads_y;
         Label rads_z;
-        RadioButton ready_rb1;
-        RadioButton ready_rb2;
+        RadioButton cal_rb;
+        RadioButton streaming_rb;
         RadioButton flight_rb;
         RadioButton deploy_rb;
         RadioButton landed_rb;
-        TextBlock log_screen;
+        Label temp;
+        Label pressure;
+        Label gpsFix;
+        Label ecefx;
+        Label ecefy;
+        Label ecefz;
+        Label accuracy_position;
+        Label ecevx;
+        Label ecevy;
+        Label ecevz;
+        Label accuracy_speed;
         Dispatcher dispatcher;
         string[] serial_port_names;
 
         enum MessageId
         {
-            SENSOR_DATA = 1,
+            SENSOR_DATA = 20,
             LOG_DATA,
         }
 
@@ -42,6 +52,55 @@ namespace Mission_Control
             ThreadStart thread_delegate = new ThreadStart(MissionControl.SerialReader);
             Thread serial_task = new Thread(thread_delegate);
             serial_task.Start();
+        }
+
+        public void SetControls(Label x, 
+                         Label y, 
+                         Label z, 
+                         Label rx, 
+                         Label ry, 
+                         Label rz, 
+                         RadioButton cal, 
+                         RadioButton streaming,
+                         RadioButton flight,
+                         RadioButton deploy, 
+                         RadioButton landed, 
+                         Label t,
+                         Label p,
+                         Label gf, 
+                         Label efx,
+                         Label efy, 
+                         Label efz, 
+                         Label aposition, 
+                         Label evx, 
+                         Label evy, 
+                         Label vz, 
+                         Label aspeed, 
+                         Dispatcher dis)
+        {
+            accel_x = x;
+            accel_y = y;
+            accel_z = z;
+            rads_x = rx;
+            rads_y = ry;
+            rads_z = rz;
+            cal_rb = cal;
+            streaming_rb = streaming;
+            flight_rb = flight;
+            deploy_rb = deploy;
+            landed_rb = landed;
+            temp = t;
+            pressure = p;
+            gpsFix = gf;
+            ecefx = efx;
+            ecefy = efy;
+            ecefz = efz;
+            accuracy_position = aposition;
+            ecevx = evx;
+            ecevy = evy;
+            ecevz = vz;
+            accuracy_speed = aspeed;
+            dispatcher = dis;
         }
 
         public static string[] SerialPorts()
@@ -67,9 +126,27 @@ namespace Mission_Control
             {
                 int length = this_.serial_port.ReadByte();
                 int message_id = this_.serial_port.ReadByte();
-                var message = new byte[length];
-                this_.serial_port.Read(message, 0, length);
-                this_.ProcessMessage(message_id, message);
+                if (length - 1 > 0)
+                {
+                    var message = new byte[length];
+                    this_.serial_port.Read(message, 0, length);
+                    this_.ProcessMessage(message_id, message);
+                } else
+                {
+                    this_.ProcessMessage(message_id, null);
+                }
+                
+            }
+        }
+
+        internal void SendCalibrate()
+        {
+            if (serial_port != null && serial_port.IsOpen)
+            {
+                byte[] msg = new byte[2];
+                msg[0] = 1; // Length
+                msg[1] = 1; // Calibrate ID
+                serial_port.Write(msg, 0, msg.Length);
             }
         }
 
@@ -77,7 +154,7 @@ namespace Mission_Control
         {
             if (serial_port != null && serial_port.IsOpen)
             {
-                byte[] msg = new byte[4];
+                byte[] msg = new byte[2];
                 msg[0] = 1; // Length
                 msg[1] = 6; // Start Data Stream ID
                 serial_port.Write(msg, 0, msg.Length);
@@ -99,7 +176,7 @@ namespace Mission_Control
         {
             if (serial_port != null && serial_port.IsOpen)
             {
-                byte[] msg = new byte[4];
+                byte[] msg = new byte[2];
                 msg[0] = 1; // Length
                 msg[1] = 8; // Start Data Stream ID
                 serial_port.Write(msg, 0, msg.Length);
@@ -110,20 +187,9 @@ namespace Mission_Control
         {
             if (serial_port != null && serial_port.IsOpen)
             {
-                byte[] msg = new byte[4];
+                byte[] msg = new byte[2];
                 msg[0] = 1; // Length
                 msg[1] = 9; // Stop Data Stream ID
-                serial_port.Write(msg, 0, msg.Length);
-            }
-        }
-
-        internal void SendCalibrate()
-        {
-            if (serial_port != null && serial_port.IsOpen)
-            {
-                byte[] msg = new byte[4];
-                msg[0] = 1; // Length
-                msg[1] = 1; // Calibrate ID
                 serial_port.Write(msg, 0, msg.Length);
             }
         }
@@ -134,35 +200,6 @@ namespace Mission_Control
             serial_port.Open();
         }
 
-        public void SetControls(Label x, 
-                                Label y, 
-                                Label z, 
-                                Label rx, 
-                                Label ry, 
-                                Label rz, 
-                                RadioButton rb1, 
-                                RadioButton rb2, 
-                                RadioButton frb, 
-                                RadioButton drb, 
-                                RadioButton lrb, 
-                                TextBlock log,
-                                Dispatcher d)
-        {
-            accel_x = x;
-            accel_y = y;
-            accel_z = z;
-            rads_x = rx;
-            rads_y = ry;
-            rads_z = rz;
-            ready_rb1 = rb1;
-            ready_rb2 = rb2;
-            flight_rb = frb;
-            deploy_rb = drb;
-            landed_rb = lrb;
-            log_screen = log;
-            dispatcher = d;
-        }
-
         public void ProcessMessage(int message_id, byte[] message)
         {
             switch ((MessageId)message_id)
@@ -170,13 +207,34 @@ namespace Mission_Control
                 case MessageId.SENSOR_DATA:
                     ProcessSensorData(message);
                     break;
-
-                case MessageId.LOG_DATA:
-
-                    break;
+                break;
 
                 default:
-                    break;
+                    dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        switch (message_id)
+                        {
+                            case 1:
+                                cal_rb.IsChecked = true;
+                                break;
+                            case 2:
+                                cal_rb.IsChecked = false;
+                                break;
+                            case 6:
+                                streaming_rb.IsChecked = true;
+                                break;
+                            case 7:
+                                streaming_rb.IsChecked = false;
+                                break;
+                            case 8:
+                                flight_rb.IsChecked = true;
+                                break;
+                            case 9:
+                                flight_rb.IsChecked = false;
+                                break;
+                        }
+                    }));
+                break;
             }
         }
 
@@ -190,35 +248,26 @@ namespace Mission_Control
             return (rads * 2000.0F) / 0xFFFF;
         }
 
-        static int ConvertRawSample(int msb, int lsb)
+        static Int16 ConvertRawSample(byte msb, byte lsb)
         {
-            return (msb << 8) | lsb;
+            return (short)((msb << 8) | lsb);
         }
 
-        private void ProcessSensorData(byte[] message)
+        static Int32 ConvertRawSample(byte b1, byte b2, byte b3, byte b4)
         {
-            int i = 0;
-            int s = ConvertRawSample(message[i+1], message[i+2]);
-            i += 2;
-            float xf = ConvertAccel(s);
-            s = ConvertRawSample(message[i + 1], message[i + 2]);
-            i += 2;
-            float yf = ConvertAccel(s);
-            s = ConvertRawSample(message[i + 1], message[i + 2]);
-            i += 2;
-            float zf = ConvertAccel(s);
-            s = ConvertRawSample(message[i + 1], message[i + 2]);
-            i += 2;
-            float rxf = ConvertAccel(s);
-            s = ConvertRawSample(message[i + 1], message[i + 2]);
-            i += 2;
-            float ryf = ConvertAccel(s);
-            s = ConvertRawSample(message[i + 1], message[i + 2]);
-            i += 2;
-            float rzf = ConvertAccel(s);
+            return (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
+        }
 
-            dispatcher.BeginInvoke(new Action(() => 
-            { 
+        void DisplayValues(Int16 ax, Int16 ay, Int16 az, Int16 rx, Int16 ry, Int16 rz)
+        {
+            float xf = ConvertAccel(ax);
+            float yf = ConvertAccel(ay);
+            float zf = ConvertAccel(az);
+            float rxf = ConvertRads(rx);
+            float ryf = ConvertRads(ry);
+            float rzf = ConvertRads(rz);
+            dispatcher.BeginInvoke(new Action(() =>
+            {
                 accel_x.Content = xf.ToString();
                 accel_y.Content = yf.ToString();
                 accel_z.Content = zf.ToString();
@@ -227,5 +276,62 @@ namespace Mission_Control
                 rads_z.Content = rzf.ToString();
             }));
         }
+
+        private void ProcessSensorData(byte[] message)
+        {
+            int i = 0; // skip tag and pad
+
+            uint tag1 = message[i++]; 
+            Int16 s1 = ConvertRawSample(message[i], message[i + 1]);
+            i += 2;
+            Int16 s2 = ConvertRawSample(message[i], message[i + 1]);
+            i += 2;
+            Int16 s3 = ConvertRawSample(message[i], message[i + 1]);
+            i += 3; // skip tag
+            Int16 s4 = ConvertRawSample(message[i], message[i + 1]);
+            i += 2;
+            Int16 s5 = ConvertRawSample(message[i], message[i + 1]);
+            i += 2;
+            Int16 s6 = ConvertRawSample(message[i], message[i + 1]);
+            i += 2;
+            // Check if Gryo
+            if (tag1 == 1)
+            {
+                DisplayValues(s4, s5, s6, s1, s2, s3);
+            } 
+            else
+            {
+                DisplayValues(s1, s2, s3, s4, s5, s6);
+            }
+
+            var t = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]) / 1000.0;
+            var p = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]) / 1000.0;
+            uint gf = message[i++];
+            Int32 efx = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            Int32 efy = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            Int32 efz = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            UInt32 aposition = (UInt32)ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            Int32 evx = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            Int32 evy = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            Int32 evz = ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            UInt32 aspeed = (UInt32)ConvertRawSample(message[i++], message[i++], message[i++], message[i++]);
+            
+            dispatcher.BeginInvoke(new Action(() => 
+            {
+                temp.Content = t.ToString();
+                pressure.Content = p.ToString();
+                gpsFix.Content = gf + " satellites";
+                ecefx.Content = efx.ToString() + " cm";
+                ecefy.Content = efy.ToString() + " cm";
+                ecefz.Content = efz.ToString() + " cm";
+                accuracy_position.Content = string.Format("3D position accuracy estimate {0} cm", aposition);
+                ecevx.Content = evx.ToString() + " cm/s";
+                ecevy.Content = evy.ToString() + " cm/s";
+                ecevz.Content = evz.ToString() + " cm/s";
+                accuracy_speed.Content = string.Format("3D speed accuracy estimate {0} cm/s", aspeed);
+            }));
+            
+        }
     }
 }
+

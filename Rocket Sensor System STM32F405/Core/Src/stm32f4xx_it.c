@@ -71,6 +71,7 @@ extern TIM_HandleTypeDef htim1;
 // The timer tick is 1us
 volatile uint32_t timer13Overflow = 0;
 void HandleGpsReceiveISR();
+void SendSensorPacket();
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -284,7 +285,7 @@ void TIM8_UP_TIM13_IRQHandler(void)
 void TIM8_TRG_COM_TIM14_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 0 */
-
+  SendSensorPacket();
   /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 0 */
   HAL_TIM_IRQHandler(&htim14);
   /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 1 */

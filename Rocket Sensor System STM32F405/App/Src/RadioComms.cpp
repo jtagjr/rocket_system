@@ -101,15 +101,23 @@ void RadioComms::HandleRadioPacketReceived(){
 }
 
 void RadioComms::HandleSendOutgoingMessage(uint8_t* buffer, uint16_t length){
+  osDelay(50);
   radio.setMode(RFM69_MODE_TX);
-  osDelay(1);
   radio.send(buffer, length);
-
   bool sent = false;
   if (radio.packetSent(sent, 2000)) {
-    PRINTLN("Packet Sent");
+    PRINTLN("Outgoing Packet Sent");
   }
+  radio.setMode(RFM69_MODE_RX);
+}
 
+void RadioComms::HandleSendOutgoingSensorData(uint8_t* buffer, uint16_t length) {
+  radio.setMode(RFM69_MODE_TX);
+  radio.send(buffer, length);
+  bool sent = false;
+  if (radio.packetSent(sent, 2000)) {
+    PRINTLN("Sensor Packet Sent");
+  }
   radio.setMode(RFM69_MODE_RX);
 }
 
@@ -234,6 +242,10 @@ void RadioComms::Run(){
 
       case static_cast<uint8_t>(TaskMsg::SEND_OUTGOING_MSG):
       HandleSendOutgoingMessage(static_cast<uint8_t*>(queue_item.msg.buffer), queue_item.msg.length);
+      break;
+
+      case static_cast<uint8_t>(TaskMsg::SEND_OUTGOING_SENSOR_DATA):
+      HandleSendOutgoingSensorData(static_cast<uint8_t*>(queue_item.msg.buffer), queue_item.msg.length);
       break;
 
       case static_cast<uint8_t>(TaskMsg::SEND_STATS):

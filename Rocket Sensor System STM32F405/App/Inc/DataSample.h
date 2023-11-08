@@ -201,26 +201,25 @@ enum class TaskMsg : uint8_t {
   STOPPED, // From other tasks to RocketApp
 
   SEND_STATS, // From Default Task to all other tasks
-
   STATS_BUFFER, // To Default Task
 
-  SAVE_BUFFER, // To DataWriter
+  SAVE_BUFFER, // To DataWriter from DataCollector
 
   ACCEL1_INTERRUPT_1, // DataCollector
   ACCEL1_INTERRUPT_2, // DataCollector
   ACCEL2_INTERRUPT_1, // DataCollector
   BAROMETER_INTERRUPT, // DataCollector
-  GPS_INTERRUPT_1,
+  GPS_INTERRUPT_1, // DataCollector
   GET_SENSOR_DATA, // To DataCollector from RadioApp
-  SAVED_BUFFER, // To DataWriter
+  SEND_SENSOR_PACKET, // From timer 14 ISR to DataCollector for periodic updates in flight mode
+  SAVED_BUFFER, // To DataCollector from DataWriter
 
   SEND_OUTGOING_MSG, //From RocketApp to RadioComms
+  SEND_OUTGOING_SENSOR_DATA, // From DataCollector to RadioComms
   RADIO_INTERRUPT_1, // To RadioComms
   RADIO_INTERRUPT_2, // To RadioComms
 
   RECEIVED_RADIO_MSG, // From RadioComms to RocketApp
-  SENSOR_DATA, // From DataCollector to RocketApp
-  SEND_STATUS_UPDATE // From 1 second ISR to RocketApp for periodic updates in flight mode
 };
 
 #define RocketPacketLength 256
@@ -264,19 +263,20 @@ extern "C" {
   void StartDataWriter();
   void StopDataWriter();
   void SaveBuffer(uint8_t index, uint16_t length, void* buffer);
+  void SendSensorPacket(uint8_t index, uint16_t length, void* buffer);
   void SendStatsDataWriter(uint16_t length, void* buffer);
 
 // To RadioComms
   void StartRadioComms();
   void StopRadioComms();
   void SendOutgoingRadioPacket(uint16_t length, void* buffer);
+  void SendOutgoingSensorPacket(uint16_t length, void* buffer);
   void SendStatsRadioComms(uint16_t length, void* buffer);
   void HandleIrq_RADIO_INT1_Pin();
   void HandleIrq_RADIO_INT2_Pin();
 
 // To RocketApp
   void ProcessIncomingRadioPacket(uint16_t length, void* buffer);
-  void SendStatusUpdate();
   void SendStatsRocketApp(uint16_t length, void* buffer);
   void SensorDataRocketApp(uint16_t length, void* buffer);
 }

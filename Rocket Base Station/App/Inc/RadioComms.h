@@ -26,7 +26,7 @@ private:
 	void HandleRadioPacketReceived();
 	void HandleRadioSendStatusMsg();
 	void HandleRadioInterrupt();
-	void ForwardMissiongControlMsg(const MissionMsgId id);
+	void ForwardMissiongControlMsg(const uint8_t* data, const uint8_t length);
 	void ProcessRadioMessage(uint8_t* msg, uint16_t length);
 
 	RFM69 radio;

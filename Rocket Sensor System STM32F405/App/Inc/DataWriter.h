@@ -27,7 +27,7 @@ private:
   void WriteBuffer(void* buffer, uint32_t length);
   void StopWriting();
 
-  bool is_writing;
+  bool is_writing{false};
 };
 
 #endif /* SRC_DATAWRITER_H_ */

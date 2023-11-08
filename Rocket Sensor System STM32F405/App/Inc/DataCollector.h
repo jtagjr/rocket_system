@@ -36,12 +36,14 @@ private:
   void HandleImuInterrupt();
   void HandleBarometerInterrupt();
 
-  void GetSensorData(uint8_t* buffer, const uint16_t length);
+  void SendSensorData();
+  void SaveBuffer(TaskMessage& queue_item);
 
   LSM6DSO lowA;
   LSM6DSO highA;
   bmp5_dev barometer;
   bmp5_osr_odr_press_config osr_odr_press_cfg;
+  bool is_sampling{false};
 
   friend void StartDataCollectionTask();
 };

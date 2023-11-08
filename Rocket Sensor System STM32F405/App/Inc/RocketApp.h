@@ -38,7 +38,6 @@ private:
   void HandleSendConfiguration(uint8_t* msg, uint16_t length);
   void HandleSendDeviceStatus(uint8_t* msg, uint16_t length);
   void HandleRunCalibrartion(uint8_t* msg, uint16_t length);
-  void HandleSendSensorData(uint8_t* msg, uint16_t length);
   void HandleEngageDataStreaming(uint8_t* msg, uint16_t length);
   void HandleDisengageDataStreaming(uint8_t* msg, uint16_t length);
   void HandleEngageFlightMode(uint8_t* msg, uint16_t length);
@@ -47,6 +46,10 @@ private:
   void HandleDisengageLowPower(uint8_t* msg, uint16_t length);
   void ProcessSensorData(uint8_t* msg, uint16_t length);
   void HandlePeriodicFlightUpdate();
+
+  bool is_calibrating{false};
+  bool is_sampling{false};
+  bool is_writing{false};
 
   friend void StartRocketAppTask();
 };
