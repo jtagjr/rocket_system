@@ -176,9 +176,6 @@ void RocketApp::Run(){
   StartStatsDefaultTask();
   StartRadioComms();
 
-  // Call this to auto start collection and writing
-  //HandleEngageFlightMode(nullptr, 0);
-
   while (true) {
     // Wait for accelerometer event
     status = osMessageQueueGet(RocketAppQueueHandle, &queue_item.data, &priority, queueWait);

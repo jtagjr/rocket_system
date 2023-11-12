@@ -196,7 +196,7 @@ namespace Mission_Control
 
         internal void OpenPort(int v)
         {
-            serial_port = new SerialPort(serial_port_names[v], 12000000, Parity.None, 8, StopBits.One);
+            serial_port = new SerialPort(serial_port_names[v], 115200, Parity.None, 8, StopBits.One);
             serial_port.Open();
         }
 

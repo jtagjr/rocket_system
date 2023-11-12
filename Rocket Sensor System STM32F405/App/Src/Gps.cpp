@@ -46,6 +46,7 @@
  */
 
 extern I2C_HandleTypeDef hi2c2;
+extern bool save_gps_buffer_;
 
 constexpr uint8_t GPS_I2C_ADDRESS = 0x42 << 1;
 constexpr uint8_t REG_ADDRESS_MSB_DATA_READY_LENGTH = 0xFD;
@@ -90,9 +91,10 @@ static uint8_t ck_a = 0;
 static uint8_t ck_b = 0;
 
 void SwitchGpsBuffers() {
+  auto tmp = current_buffer;
   last_sample = &current_buffer[1];
   current_buffer = next_buffer;
-  next_buffer = nullptr;
+  next_buffer = tmp;
   sample_idx = 0;
   if (current_buffer != nullptr) {
     current_buffer[0].header.sample_length = 0;
@@ -102,6 +104,12 @@ void SwitchGpsBuffers() {
   }
 }
 
+void SaveGpsBuffer() {
+  SaveBuffer(3, sizeof(NavigationFileEntry)*2, &next_buffer[0]);
+}
+
+void GpsBufferSaved(void* buffer) {}
+/*
 void GpsBufferSaved(void* buffer) {
   NavigationFileEntry** tmp = current_buffer == nullptr ? &current_buffer : &next_buffer;
   *tmp = static_cast<NavigationFileEntry*>(buffer);
@@ -113,6 +121,7 @@ void GpsBufferSaved(void* buffer) {
     ptr[1].header.sample_number = 0;
   }
 }
+*/
 
 uint32_t GpsMsgCount(){
   return msg_count;
@@ -256,8 +265,8 @@ static void ckb(uint8_t data){
     ++sample_idx;
     ++msg_count;
     if (2 == sample_idx) {
-      SaveBuffer(3, sizeof(NavigationFileEntry)*2, &current_buffer[0]);
       SwitchGpsBuffers();
+      save_gps_buffer_ = true;
     }
   }
   else {

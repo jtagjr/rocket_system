@@ -26,6 +26,9 @@ extern osMessageQueueId_t DataCollectionQueueHandle;
 
 DataCollector collector;
 
+// Shared with GPS
+bool save_gps_buffer_{false};
+
 // Shared with DataWriter
 constexpr uint8_t MAX_BUFFERS { 2 };
 
@@ -428,6 +431,7 @@ void DataCollector::Run(){
   osStatus_t status;
   uint8_t priority;
   TaskMessage queue_item;
+  static constexpr uint32_t RunTickDelay{10};
   uint32_t queueWait { osWaitForever };
 
   while (true) {
@@ -436,6 +440,11 @@ void DataCollector::Run(){
     if (status != osOK && status != osErrorTimeout) {
       PRINTLN("DataCollector acquire msg queue not ok Task");
       continue;
+    }
+
+    if (save_gps_buffer_) {
+      save_gps_buffer_ = false;
+      SaveGpsBuffer();
     }
 
     switch (queue_item.msg.id) {
@@ -472,10 +481,12 @@ void DataCollector::Run(){
       break;
 
     case static_cast<uint8_t>(TaskMsg::START):
+      queueWait = RunTickDelay;
       StartSensorSampling();
       break;
 
     case static_cast<uint8_t>(TaskMsg::STOP):
+      queueWait = osWaitForever;
       StopSensorSampling();
       break;
 

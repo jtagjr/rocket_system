@@ -500,6 +500,7 @@ uint32_t GpsFrameErrors();
 uint32_t GpsOverrunErrors();
 uint32_t GpsNoiseErrors();
 const NavigationFileEntry* GpsSample();
+void SaveGpsBuffer();
 void GpsBufferSaved(void* buffer);
 void ReadFirmwareInformation();
 
